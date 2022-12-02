@@ -76,9 +76,33 @@ def executeQ4(standalone=True):
     max_passengers = df1.select("max_passenger_ride").collect()[0][0]
     result = df1.filter(df1.max_passenger_ride!=max_passengers)\
         .orderBy(df1.total_passengers,ascending=False).drop(df1.max_passenger_ride).limit(3)
-    result.repartition(1).write.option("header",True).mode("overwrite").csv("/home/user/advdb/parsedData/queryResults/Q3API")
+    result.repartition(1).write.option("header",True).mode("overwrite").csv("/home/user/advdb/parsedData/queryResults/Q4")
     end = time.time()
     q4result = result
     if standalone:
         spark.stop()
     return (end-start),(end-after_read),q4result
+
+def executeQ5(standalone=True):
+    spark = SparkSession.builder.master(master).appName("Getting Q5").getOrCreate()
+    start = time.time()
+    df = spark.read.parquet("/home/user/advdb/parsedData/taxidata.parquet")
+    after_read = time.time()
+    df1 = df.select(df.tpep_pickup_datetime.alias("date"),df.tip_amount,df.fare_amount)
+    df1 = df1.withColumn("tip_percent",df.fare_amount/df.tip_amount)\
+        .withColumn("month",month(df1.date)).withColumn("day",dayofmonth(df1.date))
+    df1 = df1.select(df1.day,df1.month,df1.tip_percent)
+    m=1
+    df2=df1.filter(df1.month==m)\
+            .groupBy(df1.day,df1.month).agg(avg(df1.tip_percent).alias("avg_tip_percent")).limit(5)
+    result = df2.orderBy(df2.avg_tip_percent,ascending=False)
+    for m in [2,3,4,5,6]:
+        df2=df1.filter(df1.month==m)\
+            .groupBy(df1.day,df1.month).agg(avg(df1.tip_percent).alias("avg_tip_percent")).limit(5)
+        result=result.union(df2.orderBy(df2.avg_tip_percent,ascending=False))
+    result.repartition(1).write.option("header",True).mode("overwrite").csv("/home/user/advdb/parsedData/queryResults/Q5")
+    end = time.time()
+    q5result = result
+    if standalone:
+        spark.stop()
+    return (end-start),(end-after_read),q5result
