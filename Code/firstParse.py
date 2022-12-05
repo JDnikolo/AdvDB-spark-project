@@ -33,22 +33,22 @@ def createAll(mode):
         print(f"total={total},count={df.count()}")
         # output to parquet
         if 'df' in mode:
-            df.write.parquet("hdfs:///parsedData/taxidata.parquet")
+            df.write.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
         if 'rdd' in mode:
             # TODO save RDD to HDFS
             taxirdd = df.rdd
-            taxirdd.saveAsPickleFile("hdfs:///parsedData/taxidata")
+            taxirdd.saveAsPickleFile("hdfs://192.168.0.1:9000/parsedData/taxidata")
     if 'locations' in mode:
         df = spark.read.option("header", True).csv("hdfs:///taxizone.csv")
         print(df.schema)
         print(df.dtypes)
         # export DF as parquet
         if 'df' in mode:
-            df.write.parquet("hdfs:///parsedData/zonedata.parquet")
+            df.write.parquet("hdfs://192.168.0.1:9000/parsedData/zonedata.parquet")
         # TODO save RDD to HDFS
         if 'rdd' in mode:
             zonerdd = df.rdd
-            zonerdd.saveAsPickleFile("hdfs:///parsedData/zonedata")
+            zonerdd.saveAsPickleFile("hdfs://192.168.0.1:9000/parsedData/zonedata")
     print("end")
 
 
