@@ -14,8 +14,9 @@ from statistics import mean as mn
 # Logger.getLogger("akka").setLevel(Level.OFF)
 
 def executeQ1(standalone=True):
-    spark = SparkSession.builder.master(
-        master).appName("Getting Q1").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q1").getOrCreate()
     start = time.time()
     df = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     zones = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/zonedata.parquet")
@@ -33,7 +34,9 @@ def executeQ1(standalone=True):
     return (end-start),(end-after_read),q1result
 
 def executeQ2(standalone=True):
-    spark = SparkSession.builder.master(master).appName("Getting Q2").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q2").getOrCreate()
     start = time.time()
     df = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
@@ -49,7 +52,9 @@ def executeQ2(standalone=True):
     return (end-start),(end-after_read),q2result
 
 def executeQ3API(standalone=True):
-    spark = SparkSession.builder.master(master).appName("Getting Q3 using the DF/SQL API").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q3 using the DF/SQL API").getOrCreate()
     start = time.time()
     df = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
@@ -71,7 +76,9 @@ def executeQ3API(standalone=True):
     return (end-start),(end-after_read),q3result
 
 def executeQ3RDD(standalone=True):
-    spark = SparkSession.builder.master(master).appName("Getting Q3 using RDDs").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q3 using RDDs").getOrCreate()
     start = time.time()
     rdd = spark.sparkContext.pickleFile("hdfs://192.168.0.1:9000/parsedData/taxidata")
     after_read = time.time()
@@ -90,7 +97,9 @@ def executeQ3RDD(standalone=True):
     return (end-start),(end-after_read),q3result
 
 def executeQ4(standalone=True):
-    spark = SparkSession.builder.master(master).appName("Getting Q4").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q4").getOrCreate()
     start = time.time()
     df = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
@@ -110,7 +119,9 @@ def executeQ4(standalone=True):
     return (end-start),(end-after_read),q4result
 
 def executeQ5(standalone=True):
-    spark = SparkSession.builder.master(master).appName("Getting Q5").getOrCreate()
+    spark = SparkSession.builder.master(master)\
+        .config("spark.executor.memory","8g")\
+        .appName("Getting Q5").getOrCreate()
     start = time.time()
     df = spark.read.parquet("hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
@@ -153,24 +164,29 @@ def execAll():
 def exec1perhour7days():
     with open('/home/user/advdb/Code/time/log.txt','a') as sys.stdout:
         print(f"Log Start: {datetime.datetime.now()}")
-        start = time.time()
-        file = open('/home/user/advdb/Code/time/times.csv','a')
-        columns = ['execTime', 
-        'Q1total', 'Q1postRead',
-        'Q2total', 'Q2postRead', 
-        'Q3APItotal', 'Q3APIpostRead',
-        'Q3RDDtotal', 'Q3RDDpostRead',
-        'Q4total', 'Q4postRead', 
-        'Q5total', 'Q5postRead']
+    start = time.time()
+    columns = ['execTime', 
+    'Q1total', 'Q1postRead',
+    'Q2total', 'Q2postRead', 
+    'Q3APItotal', 'Q3APIpostRead',
+    'Q3RDDtotal', 'Q3RDDpostRead',
+    'Q4total', 'Q4postRead', 
+    'Q5total', 'Q5postRead']
+    with open('/home/user/advdb/Code/time/times.csv','a') as file:
         writer = csv.DictWriter(file,fieldnames=columns)
         writer.writeheader()
-        while(time.time()-start <60*60*7):
-            start=time.time()
-            times = execAll()
-            writer.writerow(times)  
+    while(time.time()-start <60*60*7):
+        start=time.time() 
+        with open('/home/user/advdb/Code/time/log.txt','a') as sys.stdout:
             print(f"{datetime.datetime.now()}:All done, sleeping.")
-            elapsed=time.time()-start
-            time.sleep(30*60-elapsed)
+            times = execAll()
+        with open('/home/user/advdb/Code/time/times.csv','a') as file:
+            writer = csv.DictWriter(file,fieldnames=columns)
+            writer.writerow(times) 
+        with open('/home/user/advdb/Code/time/log.txt','a') as sys.stdout:
+            print(f"{datetime.datetime.now()}:All done, sleeping.")
+        elapsed=time.time()-start
+        time.sleep(30*60-elapsed)
 
 if __name__=="__main__":
         exec1perhour7days()
