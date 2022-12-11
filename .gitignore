@@ -1,0 +1,5 @@
+taxidata.parquet
+locdata.parquet
+TaxiSource/*
+parsedData/*
+queryResults/*
