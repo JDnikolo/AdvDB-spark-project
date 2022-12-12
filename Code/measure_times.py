@@ -6,17 +6,17 @@ import time,datetime
 def execAll():
     times= {}
     times["execTime"] = datetime.datetime.now()
-    times["Q1total"],times["Q1postRead"],res = executeQ1()
+    times["Q1total"],times["Q1postRead"],res = executeQ1(standalone=True)
     print(f"{datetime.datetime.now()}: Q1 done.")
-    times["Q2total"],times["Q2postRead"],res = executeQ2()
+    times["Q2total"],times["Q2postRead"],res = executeQ2(standalone=True)
     print(f"{datetime.datetime.now()}: Q2 done.")
-    times["Q3APItotal"],times["Q3APIpostRead"],res = executeQ3API()
+    times["Q3APItotal"],times["Q3APIpostRead"],res = executeQ3API(standalone=True)
     print(f"{datetime.datetime.now()}: Q3API done.")
-    times["Q3RDDtotal"],times["Q3RDDpostRead"],res = executeQ3RDD()
+    times["Q3RDDtotal"],times["Q3RDDpostRead"],res = executeQ3RDD(standalone=True)
     print(f"{datetime.datetime.now()}: Q3RDD done.")
-    times["Q4total"],times["Q4postRead"],res = executeQ4()
+    times["Q4total"],times["Q4postRead"],res = executeQ4(standalone=True)
     print(f"{datetime.datetime.now()}: Q4 done.")
-    times["Q5total"],times["Q5postRead"],res = executeQ5()
+    times["Q5total"],times["Q5postRead"],res = executeQ5(standalone=True)
     print(f"{datetime.datetime.now()}: Q5 done.")
     return times
 

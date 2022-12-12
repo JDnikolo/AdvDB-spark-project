@@ -3,7 +3,7 @@ from pyspark.sql.functions import *
 from firstParse import master
 import time
 
-def executeQ1(standalone=True):
+def executeQ1(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q1").getOrCreate()
@@ -23,7 +23,7 @@ def executeQ1(standalone=True):
         spark.stop()
     return (end-start),(end-after_read),q1result
 
-def executeQ2(standalone=True):
+def executeQ2(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q2").getOrCreate()
@@ -41,7 +41,7 @@ def executeQ2(standalone=True):
         spark.stop()
     return (end-start),(end-after_read),q2result
 
-def executeQ3API(standalone=True):
+def executeQ3API(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q3 using the DF/SQL API").getOrCreate()
@@ -65,7 +65,7 @@ def executeQ3API(standalone=True):
         spark.stop()
     return (end-start),(end-after_read),q3result
 
-def executeQ3RDD(standalone=True):
+def executeQ3RDD(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q3 using RDDs").getOrCreate()
@@ -86,7 +86,7 @@ def executeQ3RDD(standalone=True):
         spark.stop()
     return (end-start),(end-after_read),q3result
 
-def executeQ4(standalone=True):
+def executeQ4(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q4").getOrCreate()
@@ -108,7 +108,7 @@ def executeQ4(standalone=True):
         spark.stop()
     return (end-start),(end-after_read),q4result
 
-def executeQ5(standalone=True):
+def executeQ5(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory","8g")\
         .appName("Getting Q5").getOrCreate()
