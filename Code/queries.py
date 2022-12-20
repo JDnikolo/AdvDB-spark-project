@@ -111,8 +111,8 @@ def executeQ4(standalone=False):
     df = spark.read.parquet(
         "hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
-    df1 = df1.withColumn("day", dayofweek(df1.tpep_pickup_datetime))
-    df1 = df.withColumn("hour_of_day", hour(df.tpep_pickup_datetime))
+    df1 = df.withColumn("day", dayofweek(df.tpep_pickup_datetime))
+    df1 = df1.withColumn("hour_of_day", hour(df1.tpep_pickup_datetime))
     df1 = df1.groupBy(df1.hour_of_day, df1.day).agg(
         max(df1.passenger_count).alias("max_passenger_ride"))
     win = Window.partitionBy(df1.day).orderBy(df1.max_passenger_ride.desc())
