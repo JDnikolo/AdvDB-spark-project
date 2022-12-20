@@ -137,18 +137,20 @@ def executeQ5(standalone=False):
     after_read = time.time()
     df1 = df.select(df.tpep_pickup_datetime.alias(
         "date"), df.tip_amount, df.fare_amount)
-    df1 = df1.withColumn("tip_percent", df.fare_amount/df.tip_amount)\
+    df1 = df1.withColumn("tip_percent",((df1.tip_amount/df1.fare_amount)*100.0))\
         .withColumn("month", month(df1.date)).withColumn("day", dayofmonth(df1.date))
     df1 = df1.select(df1.day, df1.month, df1.tip_percent)
     m = 1
-    df2 = df1.filter(df1.month == m)\
-        .groupBy(df1.day, df1.month).agg(avg(df1.tip_percent).alias("avg_tip_percent")).limit(5)
-    result = df2.orderBy(df2.avg_tip_percent, ascending=False)
+    df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
+            .agg(max(df1.tip_percent).alias("max_tip_percent"))
+    df2=df2.orderBy(df2.max_tip_percent, ascending=False).limit(5)
+    result = df2.orderBy(df2.max_tip_percent, ascending=False)
     for m in [2, 3, 4, 5, 6]:
-        df2 = df1.filter(df1.month == m)\
-            .groupBy(df1.day, df1.month).agg(avg(df1.tip_percent).alias("avg_tip_percent")).limit(5)
-        result = result.union(df2.orderBy(
-            df2.avg_tip_percent, ascending=False))
+        df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
+                .agg(max(df1.tip_percent).alias("max_tip_percent"))
+        df2=df2.orderBy(df2.max_tip_percent, ascending=False).limit(5)
+        result = result.union(df2)
+    result = result.select(result.month,result.day,result.max_tip_percent)
     result.repartition(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q5")
     end = time.time()
