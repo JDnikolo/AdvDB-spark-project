@@ -37,10 +37,10 @@ def executeQ2(standalone=False):
         "hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
     df = df.withColumn("month", month(df.tpep_pickup_datetime))
-    result = df.select(df.month, df.tolls_amount).filter(df.tolls_amount > 0.0)
+    result = df.select(df.month, df.tolls_amount)
     result = result.groupBy("month").agg(
-        sum(df.tolls_amount).alias("total_tolls"))
-    result = result.orderBy(result.total_tolls, ascending=False)
+        max(df.tolls_amount).alias("max_toll_amount"))
+    result = result.orderBy(result.max_toll_amount, ascending=False)
     result.coalesce(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q2")
     end = time.time()
