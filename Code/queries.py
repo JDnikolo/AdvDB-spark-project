@@ -111,13 +111,14 @@ def executeQ4(standalone=False):
     df = spark.read.parquet(
         "hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
-    df1 = df.withColumn("day", dayofweek(df.tpep_pickup_datetime))
-    df1 = df1.withColumn("hour_of_day", hour(df1.tpep_pickup_datetime))
+    df1 = df.withColumn("hour_of_day", hour(df.tpep_pickup_datetime))
+    df1 = df1.withColumn("day", dayofweek(df1.tpep_pickup_datetime))
     df1 = df1.groupBy(df1.hour_of_day, df1.day).agg(
-        max(df1.passenger_count).alias("max_passenger_ride"))
-    win = Window.partitionBy(df1.day).orderBy(df1.max_passenger_ride.desc())
+        sum(df1.passenger_count).alias("total_passengers"))
+    win = Window.partitionBy(df1.day).orderBy(df1.total_passengers.desc())
     result = df1.withColumn("rank", rank().over(win))
     result = result.filter(result.rank < 4).orderBy([result.day, result.rank])
+    result=result.select("day","hour_of_day","total_passengers","rank")
     result.repartition(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q4")
     end = time.time()
@@ -142,15 +143,15 @@ def executeQ5(standalone=False):
     df1 = df1.select(df1.day, df1.month, df1.tip_percent)
     m = 1
     df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
-            .agg(max(df1.tip_percent).alias("max_tip_percent"))
-    df2=df2.orderBy(df2.max_tip_percent, ascending=False).limit(5)
-    result = df2.orderBy(df2.max_tip_percent, ascending=False)
+            .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
+    df2=df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
+    result = df2.orderBy(df2.avg_tip_percent, ascending=False)
     for m in [2, 3, 4, 5, 6]:
         df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
-                .agg(max(df1.tip_percent).alias("max_tip_percent"))
-        df2=df2.orderBy(df2.max_tip_percent, ascending=False).limit(5)
+                .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
+        df2=df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
         result = result.union(df2)
-    result = result.select(result.month,result.day,result.max_tip_percent)
+    result = result.select(result.month,result.day,result.avg_tip_percent)
     result.repartition(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q5")
     end = time.time()
