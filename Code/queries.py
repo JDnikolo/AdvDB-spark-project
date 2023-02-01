@@ -4,6 +4,7 @@ from pyspark.sql.functions import *
 from firstParse import master
 import time
 
+
 def executeQ1(standalone=False):
     spark = SparkSession.builder.master(master)\
         .config("spark.executor.memory", "8g")\
@@ -37,10 +38,11 @@ def executeQ2(standalone=False):
         "hdfs://192.168.0.1:9000/parsedData/taxidata.parquet")
     after_read = time.time()
     df = df.withColumn("month", month(df.tpep_pickup_datetime))
-    result = df.select(df.month, df.tolls_amount)
-    result = result.groupBy("month").agg(
-        max(df.tolls_amount).alias("max_toll_amount"))
-    result = result.orderBy(result.max_toll_amount, ascending=False)
+    window = Window.partitionBy(df.month).orderBy(df.tolls_amount.desc())
+    result = df.withColumn("row", row_number().over(
+        window))
+    result = result.where(result.row == 1).drop(result.row)
+    result = result.orderBy(result.month)
     result.coalesce(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q2")
     end = time.time()
@@ -118,7 +120,7 @@ def executeQ4(standalone=False):
     win = Window.partitionBy(df1.day).orderBy(df1.total_passengers.desc())
     result = df1.withColumn("rank", rank().over(win))
     result = result.filter(result.rank < 4).orderBy([result.day, result.rank])
-    result=result.select("day","hour_of_day","total_passengers","rank")
+    result = result.select("day", "hour_of_day", "total_passengers", "rank")
     result.repartition(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q4")
     end = time.time()
@@ -138,20 +140,20 @@ def executeQ5(standalone=False):
     after_read = time.time()
     df1 = df.select(df.tpep_pickup_datetime.alias(
         "date"), df.tip_amount, df.fare_amount)
-    df1 = df1.withColumn("tip_percent",((df1.tip_amount/df1.fare_amount)*100.0))\
+    df1 = df1.withColumn("tip_percent", ((df1.tip_amount/df1.fare_amount)*100.0))\
         .withColumn("month", month(df1.date)).withColumn("day", dayofmonth(df1.date))
     df1 = df1.select(df1.day, df1.month, df1.tip_percent)
     m = 1
     df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
-            .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
-    df2=df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
+        .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
+    df2 = df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
     result = df2.orderBy(df2.avg_tip_percent, ascending=False)
     for m in [2, 3, 4, 5, 6]:
         df2 = df1.filter(df1.month == m).groupBy(df1.day, df1.month)\
-                .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
-        df2=df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
+            .agg(avg(df1.tip_percent).alias("avg_tip_percent"))
+        df2 = df2.orderBy(df2.avg_tip_percent, ascending=False).limit(5)
         result = result.union(df2)
-    result = result.select(result.month,result.day,result.avg_tip_percent)
+    result = result.select(result.month, result.day, result.avg_tip_percent)
     result.repartition(1).write.option("header", True).mode("overwrite").csv(
         "hdfs://192.168.0.1:9000/parsedData/queryResults/Q5")
     end = time.time()
